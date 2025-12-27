@@ -9,53 +9,56 @@
     --color-bg-dark: #0a0a12;
     --color-bg-medium: #151525;
     --color-bg-light: #252540;
-    
+
     --color-primary: #8b5cf6;
     --color-primary-glow: rgba(139, 92, 246, 0.5);
     --color-secondary: #06b6d4;
     --color-accent: #f59e0b;
-    
+
     --color-health: #ef4444;
     --color-health-glow: rgba(239, 68, 68, 0.5);
     --color-xp: #22c55e;
     --color-xp-glow: rgba(34, 197, 94, 0.5);
-    
+
     --color-forge: #f97316;
     --color-relic: #a855f7;
-    
+
     --color-text: #f8fafc;
     --color-text-dim: #94a3b8;
-    
+
     /* Spacing */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
-    
+
     /* Borders */
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 16px;
     --radius-full: 9999px;
-    
+
     /* Shadows */
     --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.3);
     --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
-    
+
     /* Transitions */
     --transition-fast: 150ms ease;
     --transition-normal: 300ms ease;
 }
 
 /* Reset & Base */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -96,7 +99,7 @@ html, body {
     z-index: 10;
 }
 
-#hud > * {
+#hud>* {
     pointer-events: auto;
 }
 
@@ -251,7 +254,8 @@ html, body {
     font-size: 24px;
 }
 
-.slot-name, .slot-count {
+.slot-name,
+.slot-count {
     font-size: 10px;
     color: var(--color-text-dim);
     margin-top: 2px;
@@ -295,6 +299,7 @@ html, body {
         opacity: 0;
         transform: translateY(-20px) scale(0.95);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -405,10 +410,12 @@ html, body {
         opacity: 0;
         transform: scale(0.5);
     }
+
     50% {
         opacity: 1;
         transform: scale(1.2);
     }
+
     100% {
         opacity: 0;
         transform: scale(1) translateY(-20px);
@@ -451,6 +458,7 @@ html, body {
         opacity: 1;
         transform: translateY(0) scale(1);
     }
+
     100% {
         opacity: 0;
         transform: translateY(-50px) scale(0.8);
@@ -458,7 +466,7 @@ html, body {
 }
 
 /* ============================================
-   Touch Controls (Mobile)
+   Touch Controls (Mobile & Tablet)
    ============================================ */
 #touch-controls {
     display: none;
@@ -471,7 +479,18 @@ html, body {
     z-index: 20;
 }
 
-#touch-controls > * {
+/* Show touch controls on touch-capable devices */
+@media (pointer: coarse) {
+    #touch-controls {
+        display: block;
+    }
+
+    #instructions {
+        display: none;
+    }
+}
+
+#touch-controls>* {
     pointer-events: auto;
 }
 
@@ -565,8 +584,15 @@ html, body {
 }
 
 @keyframes shimmer {
-    0%, 100% { filter: brightness(1); }
-    50% { filter: brightness(1.3); }
+
+    0%,
+    100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(1.3);
+    }
 }
 
 .loading-content p {
@@ -592,8 +618,13 @@ html, body {
 }
 
 @keyframes loadingProgress {
-    0% { width: 0%; }
-    100% { width: 100%; }
+    0% {
+        width: 0%;
+    }
+
+    100% {
+        width: 100%;
+    }
 }
 
 /* ============================================
@@ -614,51 +645,46 @@ html, body {
 /* ============================================
    Responsive Design
    ============================================ */
-@media (max-width: 768px) {
-    #touch-controls {
-        display: block;
-    }
-    
-    #instructions {
-        display: none;
-    }
-    
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1024px) and (pointer: coarse) {
+    /* Touch controls already shown via pointer:coarse above */
+
     #player-stats {
         min-width: 150px;
         padding: var(--spacing-sm);
     }
-    
+
     .stat-bar {
         height: 20px;
     }
-    
+
     .stat-text {
         font-size: 10px;
     }
-    
+
     #stats-display {
         font-size: 12px;
         gap: var(--spacing-sm);
     }
-    
+
     #inventory-quick {
         bottom: 180px;
     }
-    
+
     .inventory-slot {
         width: 50px;
         height: 50px;
     }
-    
+
     .slot-icon {
         font-size: 20px;
     }
-    
+
     .choice-btn {
         min-width: 140px;
         padding: var(--spacing-md);
     }
-    
+
     .choice-icon {
         font-size: 36px;
     }
@@ -668,19 +694,19 @@ html, body {
     #player-stats {
         min-width: 120px;
     }
-    
+
     #kill-counter {
         font-size: 12px;
     }
-    
+
     #companion-status {
         top: calc(var(--spacing-md) + 40px);
     }
-    
+
     .modal-content {
         padding: var(--spacing-md);
     }
-    
+
     .modal-content h2 {
         font-size: 22px;
     }
