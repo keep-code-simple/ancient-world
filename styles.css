@@ -151,6 +151,16 @@ body {
     box-shadow: 0 0 10px var(--color-xp-glow);
 }
 
+.stamina-bar {
+    height: 16px;
+}
+
+.stamina-bar .stat-fill {
+    width: 100%;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
 .stat-text {
     position: absolute;
     top: 50%;
@@ -186,6 +196,33 @@ body {
     border: 1px solid rgba(239, 68, 68, 0.3);
     font-weight: 600;
     backdrop-filter: blur(10px);
+}
+
+/* Biome Indicator */
+#biome-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, rgba(21, 21, 37, 0.7), rgba(37, 37, 64, 0.6));
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    backdrop-filter: blur(5px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+#biome-indicator.visible {
+    opacity: 1;
+}
+
+#biome-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-shadow: 0 0 10px var(--color-primary-glow);
 }
 
 /* Companion Status */

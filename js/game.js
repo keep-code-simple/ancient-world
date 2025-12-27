@@ -1,6 +1,7 @@
 /**
  * Main Game Controller - Orchestrates all game systems
- * Ancient World - Medieval Adventure Game
+ * Ancient World - Medieval Adventure Game (Iteration 2)
+ * Features: Biomes, Jumping, Swimming, Magical Creatures
  */
 
 class Game {
@@ -9,6 +10,10 @@ class Game {
         this.clock = new THREE.Clock();
         this.isRunning = false;
         this.isPaused = false;
+
+        // Biome tracking
+        this.currentBiomeName = '';
+        this.biomeChangeTimer = 0;
 
         // Initialize Three.js
         this.initRenderer();
@@ -42,15 +47,15 @@ class Game {
 
     initScene() {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87ceeb); // Sky blue
-        this.scene.fog = new THREE.Fog(0x87ceeb, 30, 80);
+        this.scene.background = new THREE.Color(0x87ceeb);
+        this.scene.fog = new THREE.Fog(0x87ceeb, 40, 100);
 
-        // Camera
+        // Camera with increased far plane for larger world
         this.camera = new THREE.PerspectiveCamera(
             60,
             window.innerWidth / window.innerHeight,
             0.1,
-            200
+            300
         );
     }
 
@@ -58,11 +63,24 @@ class Game {
         // Input
         this.input = new InputHandler();
 
-        // World
-        this.world = new World(this.scene);
+        // Biome Manager (must be created before world)
+        this.biomeManager = new BiomeManager(this.scene);
 
-        // Player
-        this.player = new Player(this.scene, { x: 0, z: 5 });
+        // World (now uses biome manager)
+        this.world = new World(this.scene, this.biomeManager);
+
+        // Create biome terrain and water
+        this.biomeManager.createTerrain();
+        this.biomeManager.createWaterBodies();
+
+        // Create environment for each biome
+        this.biomeManager.createBiomeEnvironment('forest', this.world.collidables);
+        this.biomeManager.createBiomeEnvironment('swamp', this.world.collidables);
+        this.biomeManager.createBiomeEnvironment('magic', this.world.collidables);
+
+        // Player (spawn in forest biome)
+        this.player = new Player(this.scene, { x: 0, z: -20 });
+        this.player.setBiomeManager(this.biomeManager);
 
         // Camera controller
         this.cameraController = new ThirdPersonCamera(this.camera, this.player.mesh);
@@ -70,9 +88,14 @@ class Game {
         // Companion
         this.companion = new Companion(this.scene, this.player);
 
-        // Enemies
+        // Enemies (biome-aware)
         this.enemies = new EnemyManager(this.scene);
-        this.enemies.spawnInitial(this.world.getSpawnPoints());
+        this.enemies.setBiomeManager(this.biomeManager);
+        this.spawnBiomeEnemies();
+
+        // Magical Creatures
+        this.creatures = new CreatureManager(this.scene, this.biomeManager);
+        this.creatures.spawnInitial();
 
         // Combat
         this.combat = new CombatSystem(this);
@@ -89,6 +112,29 @@ class Game {
         // Mouse wheel for camera zoom
         window.addEventListener('wheel', (e) => {
             this.cameraController.zoom(e.deltaY);
+        });
+    }
+
+    spawnBiomeEnemies() {
+        // Forest enemies
+        const forestPoints = this.biomeManager.getSpawnPointsForBiome('forest');
+        forestPoints.forEach((p, i) => {
+            const types = ['goblin', 'orc', 'skeleton'];
+            this.enemies.spawn(p.x, p.z, types[i % types.length]);
+        });
+
+        // Swamp enemies
+        const swampPoints = this.biomeManager.getSpawnPointsForBiome('swamp');
+        swampPoints.forEach((p, i) => {
+            const types = ['bog_lurker', 'poison_frog'];
+            this.enemies.spawn(p.x, p.z, types[i % types.length]);
+        });
+
+        // Magic enemies
+        const magicPoints = this.biomeManager.getSpawnPointsForBiome('magic');
+        magicPoints.forEach((p, i) => {
+            const types = ['wisp', 'corrupted_golem'];
+            this.enemies.spawn(p.x, p.z, types[i % types.length]);
         });
     }
 
@@ -128,15 +174,21 @@ class Game {
 
         // Player movement
         this.player.move(movement, this.cameraController, deltaTime, this.world);
+
+        // Player jump
+        if (this.input.isJumpPressed()) {
+            this.player.jump();
+        }
+
+        // Player update (includes jump physics and swimming)
         this.player.update(deltaTime);
 
-        // Player attack
+        // Player attack (mouse click)
         if (this.input.isAttackPressed()) {
             const attackResults = this.combat.playerAttack(this.player, this.enemies);
 
             if (attackResults) {
                 attackResults.forEach(result => {
-                    // Show damage number
                     const pos = result.position.clone();
                     pos.y += 2;
                     this.ui.showDamageNumber(
@@ -149,13 +201,27 @@ class Game {
                     );
                 });
             }
+
+            // Also attack nearby creatures
+            const nearbyCreature = this.creatures.getNearbyCreature(this.player.position, this.player.attackRange);
+            if (nearbyCreature && !nearbyCreature.isDead()) {
+                const { damage } = this.player.calculateDamage();
+                nearbyCreature.takeDamage(damage);
+            }
         }
 
         // Check interaction
         if (this.input.isInteractPressed()) {
+            // Check world interactables
             const interactable = this.world.getNearbyInteractable(this.player.position);
             if (interactable) {
                 this.handleInteraction(interactable);
+            }
+
+            // Check creature interaction
+            const creature = this.creatures.getNearbyCreature(this.player.position, 4);
+            if (creature && !creature.isDead()) {
+                creature.interact(this.player);
             }
         }
 
@@ -165,8 +231,15 @@ class Game {
         // Update camera
         this.cameraController.update(deltaTime);
 
+        // Update biome effects based on player position
+        this.biomeManager.updateBiomeEffects(this.player.position);
+        this.updateBiomeUI();
+
         // Update enemies
         this.enemies.update(deltaTime, this.player, this.world);
+
+        // Update creatures
+        this.creatures.update(deltaTime, this.player, this.world);
 
         // Update companion
         this.companion.update(deltaTime, this.enemies, this.world);
@@ -177,21 +250,58 @@ class Game {
             this.ui.showLootPickup(item);
         });
 
-        // Update world animations
+        // Update world and biome animations
         this.world.update(time);
+        this.biomeManager.update(time);
 
         // Update UI
         this.ui.updatePlayerStats(this.player);
         this.ui.updateCompanionHealth(this.companion);
         this.ui.updateInventory(this.player);
+        this.updateStaminaUI();
 
         // Check progression milestones
-        const milestones = this.progression.checkMilestones(this.player);
-        // Could show milestone notifications here
+        this.progression.checkMilestones(this.player);
 
         // Check player death
         if (this.player.isDead()) {
             this.handlePlayerDeath();
+        }
+    }
+
+    updateBiomeUI() {
+        const biome = this.biomeManager.getBiomeAt(this.player.position.x, this.player.position.z);
+        const indicator = document.getElementById('biome-indicator');
+        const nameEl = document.getElementById('biome-name');
+
+        if (biome.name !== this.currentBiomeName) {
+            this.currentBiomeName = biome.name;
+            nameEl.textContent = biome.name;
+            indicator.classList.add('visible');
+            this.biomeChangeTimer = 3; // Show for 3 seconds
+        }
+
+        if (this.biomeChangeTimer > 0) {
+            this.biomeChangeTimer -= 0.016; // ~60fps
+            if (this.biomeChangeTimer <= 0) {
+                indicator.classList.remove('visible');
+            }
+        }
+    }
+
+    updateStaminaUI() {
+        const staminaFill = document.getElementById('stamina-fill');
+        const staminaText = document.getElementById('stamina-text');
+        const percent = this.player.getStaminaPercent() * 100;
+
+        staminaFill.style.width = percent + '%';
+
+        if (this.player.isSwimming) {
+            staminaText.textContent = 'Swimming';
+            staminaFill.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+        } else {
+            staminaText.textContent = 'Stamina';
+            staminaFill.style.background = 'linear-gradient(90deg, #3b82f6, #60a5fa)';
         }
     }
 
@@ -241,15 +351,13 @@ class Game {
     }
 
     handlePlayerDeath() {
-        // Simple respawn
+        // Respawn in forest
         this.player.stats.health = this.player.stats.maxHealth;
-        this.player.group.position.set(0, 0, 5);
-
-        // Clear nearby enemies
-        // Could add death penalty here
+        this.player.stats.stamina = this.player.stats.maxStamina;
+        this.player.group.position.set(0, 0, -20);
+        this.player.isSwimming = false;
     }
 
-    // Pause/resume
     pause() {
         this.isPaused = true;
     }
@@ -258,7 +366,6 @@ class Game {
         this.isPaused = false;
     }
 
-    // Stop game
     stop() {
         this.isRunning = false;
     }

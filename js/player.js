@@ -1,10 +1,11 @@
 /**
- * Player Entity - Character with stats, movement, and combat
+ * Player Entity - Character with stats, movement, combat, jumping, and swimming
  */
 
 class Player {
     constructor(scene, position = { x: 0, z: 0 }) {
         this.scene = scene;
+        this.biomeManager = null; // Set after creation
 
         // Stats
         this.stats = {
@@ -14,7 +15,9 @@ class Player {
             defense: 5,
             speed: 8,
             critChance: 0.1,
-            critMultiplier: 2.0
+            critMultiplier: 2.0,
+            maxStamina: 100,
+            stamina: 100
         };
 
         // Progression
@@ -37,10 +40,25 @@ class Player {
 
         // Combat state
         this.attackCooldown = 0;
-        this.attackSpeed = 0.5; // seconds between attacks
+        this.attackSpeed = 0.5;
         this.attackRange = 2.5;
         this.isAttacking = false;
         this.attackAnimTime = 0;
+
+        // Jumping state
+        this.isGrounded = true;
+        this.isJumping = false;
+        this.jumpVelocity = 0;
+        this.gravity = -25;
+        this.jumpForce = 10;
+        this.groundHeight = 0;
+
+        // Swimming state
+        this.isSwimming = false;
+        this.waterDepth = 0;
+        this.swimSpeed = 0.5; // Multiplier when swimming
+        this.staminaDrainRate = 10; // Per second in water
+        this.staminaRegenRate = 15; // Per second on land
 
         // Abilities
         this.abilities = {
@@ -52,6 +70,9 @@ class Player {
         // Status effects
         this.invulnerable = false;
         this.invulnerableTimer = 0;
+
+        // Current biome
+        this.currentBiome = null;
 
         // Create 3D model
         this.createModel(position);
@@ -213,7 +234,12 @@ class Player {
         this.sword = this.swordGroup;
     }
 
-    // Movement
+    // Set biome manager reference
+    setBiomeManager(biomeManager) {
+        this.biomeManager = biomeManager;
+    }
+
+    // Movement with swimming support
     move(direction, cameraController, deltaTime, world) {
         if (direction.x === 0 && direction.z === 0) {
             return;
@@ -229,14 +255,21 @@ class Player {
             forward.z * (-direction.z) + right.z * direction.x
         ).normalize();
 
-        const speed = this.stats.speed * deltaTime;
-        const newPosition = this.group.position.clone().add(
-            moveDirection.multiplyScalar(speed)
-        );
+        // Calculate speed with swimming modifier
+        let speedMultiplier = 1;
+        if (this.isSwimming) {
+            speedMultiplier = this.swimSpeed;
+        }
+
+        const speed = this.stats.speed * speedMultiplier * deltaTime;
+        const newPosition = this.group.position.clone();
+        newPosition.x += moveDirection.x * speed;
+        newPosition.z += moveDirection.z * speed;
 
         // Check collision before moving
         if (!world.checkCollision(newPosition, this.collisionRadius)) {
-            this.group.position.copy(newPosition);
+            this.group.position.x = newPosition.x;
+            this.group.position.z = newPosition.z;
 
             // Rotate to face movement direction
             const targetAngle = Math.atan2(moveDirection.x, moveDirection.z);
@@ -246,12 +279,91 @@ class Player {
                 10 * deltaTime
             );
 
-            // Simple walk animation
-            const walkSpeed = 10;
-            const walkAmount = Math.sin(Date.now() * 0.01 * walkSpeed) * 0.3;
+            // Walk animation (slower when swimming)
+            const walkSpeed = this.isSwimming ? 5 : 10;
+            const walkAmount = Math.sin(Date.now() * 0.01 * walkSpeed) * (this.isSwimming ? 0.15 : 0.3);
             this.leftLeg.rotation.x = walkAmount;
             this.rightLeg.rotation.x = -walkAmount;
-            this.leftArm.rotation.x = -walkAmount * 0.5;
+            this.leftArm.rotation.x = this.isSwimming ? walkAmount : -walkAmount * 0.5;
+            this.rightArm.rotation.x = this.isSwimming ? -walkAmount : 0;
+        }
+    }
+
+    // Jump
+    jump() {
+        if (this.isGrounded && !this.isSwimming) {
+            this.isJumping = true;
+            this.isGrounded = false;
+            this.jumpVelocity = this.jumpForce;
+            return true;
+        }
+        return false;
+    }
+
+    // Update jump physics
+    updateJump(deltaTime) {
+        if (!this.isGrounded) {
+            // Apply gravity
+            this.jumpVelocity += this.gravity * deltaTime;
+            this.group.position.y += this.jumpVelocity * deltaTime;
+
+            // Check ground collision
+            if (this.group.position.y <= this.groundHeight) {
+                this.group.position.y = this.groundHeight;
+                this.isGrounded = true;
+                this.isJumping = false;
+                this.jumpVelocity = 0;
+            }
+        }
+    }
+
+    // Update swimming state
+    updateSwimming(deltaTime) {
+        if (!this.biomeManager) return;
+
+        const inWater = this.biomeManager.isInWater(this.position.x, this.position.z);
+        this.waterDepth = this.biomeManager.getWaterDepth(this.position.x, this.position.z);
+
+        if (inWater && this.waterDepth > 0.5) {
+            if (!this.isSwimming) {
+                this.isSwimming = true;
+                // Cancel jump when entering water
+                this.isJumping = false;
+                this.isGrounded = true;
+                this.jumpVelocity = 0;
+            }
+
+            // Drain stamina while swimming
+            this.stats.stamina -= this.staminaDrainRate * deltaTime;
+            if (this.stats.stamina <= 0) {
+                this.stats.stamina = 0;
+                // Take damage when out of stamina in water
+                this.takeDamage(5 * deltaTime);
+            }
+
+            // Bob in water
+            this.group.position.y = -this.waterDepth * 0.3 + Math.sin(Date.now() * 0.003) * 0.1;
+        } else {
+            if (this.isSwimming) {
+                this.isSwimming = false;
+                this.group.position.y = this.groundHeight;
+            }
+
+            // Regenerate stamina on land
+            if (this.stats.stamina < this.stats.maxStamina) {
+                this.stats.stamina = Math.min(
+                    this.stats.maxStamina,
+                    this.stats.stamina + this.staminaRegenRate * deltaTime
+                );
+            }
+        }
+
+        // Update ground height based on terrain
+        if (!this.isSwimming && this.biomeManager) {
+            this.groundHeight = this.biomeManager.getHeightAt(this.position.x, this.position.z);
+            if (this.isGrounded) {
+                this.group.position.y = this.groundHeight;
+            }
         }
     }
 
@@ -408,6 +520,12 @@ class Player {
             this.attackCooldown -= deltaTime;
         }
 
+        // Jump physics
+        this.updateJump(deltaTime);
+
+        // Swimming
+        this.updateSwimming(deltaTime);
+
         // Attack animation
         if (this.isAttacking) {
             this.attackAnimTime += deltaTime;
@@ -449,11 +567,16 @@ class Player {
             this.powerGlow.material.opacity -= deltaTime * 0.3;
         }
 
-        // Idle leg reset
-        if (!this.isAttacking) {
+        // Idle leg reset (skip if swimming)
+        if (!this.isAttacking && !this.isSwimming) {
             this.leftLeg.rotation.x *= 0.9;
             this.rightLeg.rotation.x *= 0.9;
         }
+    }
+
+    // Get stamina percentage for UI
+    getStaminaPercent() {
+        return this.stats.stamina / this.stats.maxStamina;
     }
 
     // Get position

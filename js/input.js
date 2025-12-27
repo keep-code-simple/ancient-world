@@ -16,8 +16,10 @@ class InputHandler {
         this.actions = {
             attack: false,
             interact: false,
+            jump: false,
             attackPressed: false,
-            interactPressed: false
+            interactPressed: false,
+            jumpPressed: false
         };
 
         // Key states
@@ -120,6 +122,21 @@ class InputHandler {
             this.actions.interact = false;
         });
 
+        // Jump button (if exists)
+        const jumpBtn = document.getElementById('jump-btn');
+        if (jumpBtn) {
+            jumpBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.actions.jumpPressed = true;
+                this.actions.jump = true;
+            });
+
+            jumpBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.actions.jump = false;
+            });
+        }
+
         // Camera rotation on canvas touch
         canvas.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
@@ -175,9 +192,10 @@ class InputHandler {
         this.keys[e.code] = true;
         this.updateMovementFromKeys();
 
+        // Space for jump (changed from attack)
         if (e.code === 'Space') {
-            this.actions.attackPressed = true;
-            this.actions.attack = true;
+            this.actions.jumpPressed = true;
+            this.actions.jump = true;
         }
 
         if (e.code === 'KeyE') {
@@ -191,7 +209,7 @@ class InputHandler {
         this.updateMovementFromKeys();
 
         if (e.code === 'Space') {
-            this.actions.attack = false;
+            this.actions.jump = false;
         }
 
         if (e.code === 'KeyE') {
@@ -255,6 +273,7 @@ class InputHandler {
     update() {
         this.actions.attackPressed = false;
         this.actions.interactPressed = false;
+        this.actions.jumpPressed = false;
 
         // Reset mouse delta after processing
         if (!this.isMobile) {
@@ -284,6 +303,11 @@ class InputHandler {
     // Check if interact was just pressed this frame
     isInteractPressed() {
         return this.actions.interactPressed;
+    }
+
+    // Check if jump was just pressed this frame
+    isJumpPressed() {
+        return this.actions.jumpPressed;
     }
 
     // Check if attack is held

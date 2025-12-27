@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,6 +8,7 @@
     <meta name="description" content="A third-person medieval adventure game with combat, loot, and progression">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <!-- Game Canvas Container -->
     <div id="game-container">
@@ -21,6 +23,10 @@
                 <div class="stat-fill" id="health-fill"></div>
                 <span class="stat-text" id="health-text">100/100</span>
             </div>
+            <div class="stat-bar stamina-bar">
+                <div class="stat-fill" id="stamina-fill"></div>
+                <span class="stat-text" id="stamina-text">Stamina</span>
+            </div>
             <div class="stat-bar xp-bar">
                 <div class="stat-fill" id="xp-fill"></div>
                 <span class="stat-text" id="xp-text">LVL 1</span>
@@ -30,6 +36,11 @@
                 <span id="defense-stat">🛡️ 5</span>
                 <span id="speed-stat">👟 5</span>
             </div>
+        </div>
+
+        <!-- Biome Indicator -->
+        <div id="biome-indicator">
+            <span id="biome-name">Whispering Woods</span>
         </div>
 
         <!-- Kill Counter -->
@@ -98,6 +109,7 @@
             </div>
         </div>
         <div id="action-buttons">
+            <button id="jump-btn" class="action-btn">⬆️</button>
             <button id="attack-btn" class="action-btn">⚔️</button>
             <button id="interact-btn" class="action-btn">🖐️</button>
         </div>
@@ -116,18 +128,20 @@
 
     <!-- Instructions -->
     <div id="instructions">
-        <p>WASD: Move | Mouse: Look | Click/Space: Attack | E: Interact</p>
+        <p>WASD: Move | Space: Jump | Mouse: Look | Click: Attack | E: Interact</p>
     </div>
 
     <!-- Three.js from CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
+
     <!-- Game Modules -->
     <script src="js/input.js"></script>
     <script src="js/camera.js"></script>
+    <script src="js/biomes.js"></script>
     <script src="js/world.js"></script>
     <script src="js/player.js"></script>
     <script src="js/enemy.js"></script>
+    <script src="js/creatures.js"></script>
     <script src="js/companion.js"></script>
     <script src="js/combat.js"></script>
     <script src="js/loot.js"></script>
@@ -135,4 +149,5 @@
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
 </body>
+
 </html>

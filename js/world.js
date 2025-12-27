@@ -1,30 +1,34 @@
 /**
  * World Generator - Creates the game environment
- * Includes terrain, trees, rocks, camps, and special locations
+ * Includes lighting, camps, and special locations
+ * Terrain is now handled by BiomeManager
  */
 
 class World {
-    constructor(scene) {
+    constructor(scene, biomeManager = null) {
         this.scene = scene;
+        this.biomeManager = biomeManager;
         this.objects = [];
         this.collidables = [];
         this.interactables = [];
 
-        // World bounds
+        // World bounds (expanded for biomes - 3x larger)
         this.bounds = {
-            minX: -50,
-            maxX: 50,
-            minZ: -50,
-            maxZ: 50
+            minX: -75,
+            maxX: 75,
+            minZ: -75,
+            maxZ: 75
         };
 
         this.create();
     }
 
     create() {
-        this.createTerrain();
+        // Terrain is now handled by BiomeManager
+        // this.createTerrain();
         this.createLighting();
-        this.createEnvironmentObjects();
+        // Environment objects now created by BiomeManager per biome
+        // this.createEnvironmentObjects();
         this.createEnemyCamp();
         this.createForge();
         this.createRelicShrine();
@@ -83,16 +87,16 @@ class World {
 
         // Main directional light (sun)
         const sun = new THREE.DirectionalLight(0xffeedd, 1.2);
-        sun.position.set(30, 50, 20);
+        sun.position.set(50, 80, 30);
         sun.castShadow = true;
-        sun.shadow.mapSize.width = 2048;
-        sun.shadow.mapSize.height = 2048;
+        sun.shadow.mapSize.width = 4096;
+        sun.shadow.mapSize.height = 4096;
         sun.shadow.camera.near = 0.5;
-        sun.shadow.camera.far = 150;
-        sun.shadow.camera.left = -60;
-        sun.shadow.camera.right = 60;
-        sun.shadow.camera.top = 60;
-        sun.shadow.camera.bottom = -60;
+        sun.shadow.camera.far = 200;
+        sun.shadow.camera.left = -100;
+        sun.shadow.camera.right = 100;
+        sun.shadow.camera.top = 100;
+        sun.shadow.camera.bottom = -100;
         this.scene.add(sun);
 
         // Secondary fill light

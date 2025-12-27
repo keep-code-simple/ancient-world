@@ -1,17 +1,20 @@
 /**
  * Enemy System - AI enemies with patrol, chase, and attack behaviors
+ * Includes biome-specific enemies with unique abilities
  */
 
 class EnemyManager {
     constructor(scene) {
         this.scene = scene;
+        this.biomeManager = null; // Set after creation
         this.enemies = [];
         this.spawnTimer = 0;
-        this.spawnInterval = 5; // seconds between spawns
-        this.maxEnemies = 8;
+        this.spawnInterval = 5;
+        this.maxEnemies = 15; // Increased for larger world
 
-        // Enemy types
+        // Enemy types with biome associations
         this.enemyTypes = {
+            // Forest biome enemies
             goblin: {
                 name: 'Goblin',
                 health: 30,
@@ -20,6 +23,7 @@ class EnemyManager {
                 xp: 20,
                 color: 0x4a7c4f,
                 scale: 0.7,
+                biome: 'forest',
                 loot: { ore: 1, chance: 0.3 }
             },
             orc: {
@@ -30,6 +34,7 @@ class EnemyManager {
                 xp: 40,
                 color: 0x5c4a3d,
                 scale: 1.2,
+                biome: 'forest',
                 loot: { ore: 2, relicShards: 1, chance: 0.5 }
             },
             skeleton: {
@@ -40,9 +45,72 @@ class EnemyManager {
                 xp: 30,
                 color: 0xccccaa,
                 scale: 0.9,
+                biome: 'forest',
                 loot: { relicShards: 1, chance: 0.4 }
+            },
+            // Swamp biome enemies
+            bog_lurker: {
+                name: 'Bog Lurker',
+                health: 50,
+                attack: 10,
+                speed: 2,
+                xp: 35,
+                color: 0x3a4a35,
+                scale: 1.0,
+                biome: 'swamp',
+                ability: 'slow',
+                abilityChance: 0.4,
+                loot: { ore: 1, relicShards: 1, chance: 0.4 }
+            },
+            poison_frog: {
+                name: 'Poison Frog',
+                health: 25,
+                attack: 6,
+                speed: 5,
+                xp: 25,
+                color: 0x66aa44,
+                scale: 0.5,
+                biome: 'swamp',
+                ability: 'poison',
+                abilityDamage: 2,
+                abilityDuration: 5,
+                attackRange: 6, // Ranged attack
+                loot: { relicShards: 1, chance: 0.3 }
+            },
+            // Magic biome enemies
+            wisp: {
+                name: 'Arcane Wisp',
+                health: 20,
+                attack: 15,
+                speed: 6,
+                xp: 40,
+                color: 0x9b59b6,
+                glowColor: 0xbb79d6,
+                scale: 0.4,
+                biome: 'magic',
+                ability: 'teleport',
+                attackRange: 8,
+                loot: { relicShards: 2, chance: 0.6 }
+            },
+            corrupted_golem: {
+                name: 'Corrupted Golem',
+                health: 120,
+                attack: 20,
+                speed: 1.5,
+                xp: 75,
+                color: 0x4a3a5c,
+                scale: 1.8,
+                biome: 'magic',
+                ability: 'slam',
+                slamRadius: 4,
+                slamCooldown: 5,
+                loot: { ore: 3, relicShards: 2, chance: 0.7 }
             }
         };
+    }
+
+    setBiomeManager(biomeManager) {
+        this.biomeManager = biomeManager;
     }
 
     // Spawn enemy at position
