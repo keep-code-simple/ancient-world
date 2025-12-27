@@ -1,0 +1,687 @@
+/* ============================================
+   Ancient World - Medieval Adventure Game
+   Core Styles & UI
+   ============================================ */
+
+/* CSS Variables - Design Tokens */
+:root {
+    /* Colors */
+    --color-bg-dark: #0a0a12;
+    --color-bg-medium: #151525;
+    --color-bg-light: #252540;
+    
+    --color-primary: #8b5cf6;
+    --color-primary-glow: rgba(139, 92, 246, 0.5);
+    --color-secondary: #06b6d4;
+    --color-accent: #f59e0b;
+    
+    --color-health: #ef4444;
+    --color-health-glow: rgba(239, 68, 68, 0.5);
+    --color-xp: #22c55e;
+    --color-xp-glow: rgba(34, 197, 94, 0.5);
+    
+    --color-forge: #f97316;
+    --color-relic: #a855f7;
+    
+    --color-text: #f8fafc;
+    --color-text-dim: #94a3b8;
+    
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    
+    /* Borders */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+    
+    /* Shadows */
+    --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.3);
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.5);
+    
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-normal: 300ms ease;
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--color-bg-dark);
+    color: var(--color-text);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Game Container */
+#game-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+#game-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* ============================================
+   HUD - Heads Up Display
+   ============================================ */
+#hud {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#hud > * {
+    pointer-events: auto;
+}
+
+/* Player Stats Panel */
+#player-stats {
+    position: absolute;
+    top: var(--spacing-md);
+    left: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    background: linear-gradient(135deg, rgba(21, 21, 37, 0.9), rgba(37, 37, 64, 0.8));
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    backdrop-filter: blur(10px);
+    min-width: 200px;
+}
+
+/* Stat Bars */
+.stat-bar {
+    position: relative;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width var(--transition-normal);
+}
+
+.health-bar .stat-fill {
+    width: 100%;
+    background: linear-gradient(90deg, var(--color-health), #f87171);
+    box-shadow: 0 0 10px var(--color-health-glow);
+}
+
+.xp-bar {
+    height: 18px;
+}
+
+.xp-bar .stat-fill {
+    width: 0%;
+    background: linear-gradient(90deg, var(--color-xp), #4ade80);
+    box-shadow: 0 0 10px var(--color-xp-glow);
+}
+
+.stat-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Stats Display */
+#stats-display {
+    display: flex;
+    gap: var(--spacing-md);
+    font-size: 14px;
+    padding-top: var(--spacing-xs);
+}
+
+#stats-display span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Kill Counter */
+#kill-counter {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: linear-gradient(135deg, rgba(21, 21, 37, 0.9), rgba(37, 37, 64, 0.8));
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+}
+
+/* Companion Status */
+#companion-status {
+    position: absolute;
+    top: calc(var(--spacing-md) + 50px);
+    right: var(--spacing-md);
+    background: linear-gradient(135deg, rgba(21, 21, 37, 0.9), rgba(37, 37, 64, 0.8));
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    backdrop-filter: blur(10px);
+    min-width: 120px;
+}
+
+.companion-label {
+    font-size: 12px;
+    color: var(--color-secondary);
+    display: block;
+    margin-bottom: var(--spacing-xs);
+}
+
+.companion-health {
+    height: 12px;
+}
+
+.companion-health .stat-fill {
+    width: 100%;
+    background: linear-gradient(90deg, var(--color-secondary), #67e8f9);
+}
+
+/* Inventory Quick View */
+#inventory-quick {
+    position: absolute;
+    bottom: var(--spacing-lg);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: var(--spacing-sm);
+    background: linear-gradient(135deg, rgba(21, 21, 37, 0.95), rgba(37, 37, 64, 0.9));
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.inventory-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition-fast);
+}
+
+.inventory-slot:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 15px var(--color-primary-glow);
+}
+
+.slot-icon {
+    font-size: 24px;
+}
+
+.slot-name, .slot-count {
+    font-size: 10px;
+    color: var(--color-text-dim);
+    margin-top: 2px;
+}
+
+/* ============================================
+   Choice Modal
+   ============================================ */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(5px);
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: linear-gradient(145deg, var(--color-bg-medium), var(--color-bg-light));
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-primary);
+    box-shadow: var(--shadow-glow), var(--shadow-card);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-content h2 {
+    font-size: 28px;
+    margin-bottom: var(--spacing-sm);
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.modal-content p {
+    color: var(--color-text-dim);
+    margin-bottom: var(--spacing-lg);
+}
+
+.choice-options {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.choice-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    min-width: 180px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid transparent;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    color: var(--color-text);
+}
+
+.choice-btn:hover {
+    transform: translateY(-4px);
+}
+
+.forge-btn {
+    border-color: var(--color-forge);
+}
+
+.forge-btn:hover {
+    background: rgba(249, 115, 22, 0.2);
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.4);
+}
+
+.relic-btn {
+    border-color: var(--color-relic);
+}
+
+.relic-btn:hover {
+    background: rgba(168, 85, 247, 0.2);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+}
+
+.choice-icon {
+    font-size: 48px;
+}
+
+.choice-name {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.choice-effect {
+    font-size: 12px;
+    color: var(--color-text-dim);
+}
+
+/* ============================================
+   Popups & Notifications
+   ============================================ */
+.popup {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    pointer-events: none;
+}
+
+.popup.hidden {
+    display: none;
+}
+
+.popup-text {
+    font-size: 48px;
+    font-weight: 900;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 0 40px rgba(245, 158, 11, 0.5);
+    animation: levelUpPulse 1s ease-out forwards;
+}
+
+@keyframes levelUpPulse {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1) translateY(-20px);
+    }
+}
+
+/* Damage Numbers */
+#damage-numbers {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+}
+
+.damage-number {
+    position: absolute;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--color-health);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px var(--color-health-glow);
+    animation: damageFloat 1s ease-out forwards;
+}
+
+.damage-number.heal {
+    color: var(--color-xp);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px var(--color-xp-glow);
+}
+
+.damage-number.crit {
+    font-size: 32px;
+    color: var(--color-accent);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 15px rgba(245, 158, 11, 0.6);
+}
+
+@keyframes damageFloat {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.8);
+    }
+}
+
+/* ============================================
+   Touch Controls (Mobile)
+   ============================================ */
+#touch-controls {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+}
+
+#touch-controls > * {
+    pointer-events: auto;
+}
+
+/* Joystick */
+#joystick-container {
+    position: absolute;
+    bottom: 100px;
+    left: 40px;
+}
+
+#joystick-base {
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.1));
+    border: 2px solid rgba(139, 92, 246, 0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#joystick-stick {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--color-primary-glow);
+    transition: transform 0.1s ease-out;
+}
+
+/* Action Buttons */
+#action-buttons {
+    position: absolute;
+    bottom: 100px;
+    right: 40px;
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.action-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 2px solid var(--color-primary);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.1));
+    font-size: 28px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    color: var(--color-text);
+}
+
+.action-btn:active {
+    transform: scale(0.9);
+    background: rgba(139, 92, 246, 0.5);
+}
+
+/* ============================================
+   Loading Screen
+   ============================================ */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--color-bg-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+}
+
+#loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-content h1 {
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary), var(--color-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+}
+
+.loading-content p {
+    color: var(--color-text-dim);
+    margin-bottom: var(--spacing-lg);
+}
+
+.loading-bar {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.loading-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    border-radius: var(--radius-full);
+    animation: loadingProgress 2s ease-out forwards;
+}
+
+@keyframes loadingProgress {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+/* ============================================
+   Instructions
+   ============================================ */
+#instructions {
+    position: fixed;
+    bottom: var(--spacing-md);
+    left: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.6);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    color: var(--color-text-dim);
+    z-index: 10;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+    #touch-controls {
+        display: block;
+    }
+    
+    #instructions {
+        display: none;
+    }
+    
+    #player-stats {
+        min-width: 150px;
+        padding: var(--spacing-sm);
+    }
+    
+    .stat-bar {
+        height: 20px;
+    }
+    
+    .stat-text {
+        font-size: 10px;
+    }
+    
+    #stats-display {
+        font-size: 12px;
+        gap: var(--spacing-sm);
+    }
+    
+    #inventory-quick {
+        bottom: 180px;
+    }
+    
+    .inventory-slot {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .slot-icon {
+        font-size: 20px;
+    }
+    
+    .choice-btn {
+        min-width: 140px;
+        padding: var(--spacing-md);
+    }
+    
+    .choice-icon {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 480px) {
+    #player-stats {
+        min-width: 120px;
+    }
+    
+    #kill-counter {
+        font-size: 12px;
+    }
+    
+    #companion-status {
+        top: calc(var(--spacing-md) + 40px);
+    }
+    
+    .modal-content {
+        padding: var(--spacing-md);
+    }
+    
+    .modal-content h2 {
+        font-size: 22px;
+    }
+}

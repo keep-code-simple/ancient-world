@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ancient World - Medieval Adventure</title>
+    <meta name="description" content="A third-person medieval adventure game with combat, loot, and progression">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Game Canvas Container -->
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+
+    <!-- HUD Overlay -->
+    <div id="hud">
+        <!-- Player Stats -->
+        <div id="player-stats">
+            <div class="stat-bar health-bar">
+                <div class="stat-fill" id="health-fill"></div>
+                <span class="stat-text" id="health-text">100/100</span>
+            </div>
+            <div class="stat-bar xp-bar">
+                <div class="stat-fill" id="xp-fill"></div>
+                <span class="stat-text" id="xp-text">LVL 1</span>
+            </div>
+            <div id="stats-display">
+                <span id="attack-stat">⚔️ 10</span>
+                <span id="defense-stat">🛡️ 5</span>
+                <span id="speed-stat">👟 5</span>
+            </div>
+        </div>
+
+        <!-- Kill Counter -->
+        <div id="kill-counter">
+            <span id="kills-text">Kills: 0</span>
+        </div>
+
+        <!-- Companion Status -->
+        <div id="companion-status">
+            <span class="companion-label">🤝 Companion</span>
+            <div class="stat-bar companion-health">
+                <div class="stat-fill" id="companion-health-fill"></div>
+            </div>
+        </div>
+
+        <!-- Inventory Quick View -->
+        <div id="inventory-quick">
+            <div class="inventory-slot" id="weapon-slot">
+                <span class="slot-icon">⚔️</span>
+                <span class="slot-name">Sword</span>
+            </div>
+            <div class="inventory-slot" id="relic-slot">
+                <span class="slot-icon">💎</span>
+                <span class="slot-count">0</span>
+            </div>
+            <div class="inventory-slot" id="resource-slot">
+                <span class="slot-icon">🔧</span>
+                <span class="slot-count">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Choice Modal -->
+    <div id="choice-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="choice-title">Make Your Choice</h2>
+            <p id="choice-description">You have gathered enough resources. Choose your path:</p>
+            <div class="choice-options">
+                <button class="choice-btn forge-btn" id="choice-forge">
+                    <span class="choice-icon">🔥</span>
+                    <span class="choice-name">Weapon Forge</span>
+                    <span class="choice-effect">+25% Attack, Power Strike</span>
+                </button>
+                <button class="choice-btn relic-btn" id="choice-relic">
+                    <span class="choice-icon">✨</span>
+                    <span class="choice-name">Relic Shrine</span>
+                    <span class="choice-effect">+20% All Stats, Regen</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Up Notification -->
+    <div id="level-up-popup" class="popup hidden">
+        <span class="popup-text">LEVEL UP!</span>
+    </div>
+
+    <!-- Damage Numbers Container -->
+    <div id="damage-numbers"></div>
+
+    <!-- Touch Controls (Mobile) -->
+    <div id="touch-controls">
+        <div id="joystick-container">
+            <div id="joystick-base">
+                <div id="joystick-stick"></div>
+            </div>
+        </div>
+        <div id="action-buttons">
+            <button id="attack-btn" class="action-btn">⚔️</button>
+            <button id="interact-btn" class="action-btn">🖐️</button>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h1>Ancient World</h1>
+            <p>Loading...</p>
+            <div class="loading-bar">
+                <div class="loading-fill" id="loading-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div id="instructions">
+        <p>WASD: Move | Mouse: Look | Click/Space: Attack | E: Interact</p>
+    </div>
+
+    <!-- Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Game Modules -->
+    <script src="js/input.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/enemy.js"></script>
+    <script src="js/companion.js"></script>
+    <script src="js/combat.js"></script>
+    <script src="js/loot.js"></script>
+    <script src="js/progression.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
