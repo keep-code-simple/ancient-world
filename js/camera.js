@@ -8,18 +8,18 @@ class ThirdPersonCamera {
         this.camera = camera;
         this.target = target; // Player mesh to follow
 
-        // Camera positioning
-        this.distance = 12;        // Distance from target
-        this.minDistance = 5;
-        this.maxDistance = 20;
-        this.height = 6;           // Height above target
-        this.heightOffset = 2;     // Look at offset above target center
+        // Camera positioning - Adjusted for terrain visibility
+        this.distance = 14;        // Distance from target (increased)
+        this.minDistance = 6;
+        this.maxDistance = 25;
+        this.height = 8;           // Height above target (increased)
+        this.heightOffset = 2.5;   // Look at offset above target center
 
         // Orbit angles
         this.azimuth = 0;          // Horizontal rotation (radians)
-        this.elevation = 0.4;      // Vertical rotation (radians)
-        this.minElevation = 0.1;
-        this.maxElevation = 1.2;
+        this.elevation = 0.5;      // Vertical rotation (increased for terrain view)
+        this.minElevation = 0.15;
+        this.maxElevation = 1.3;
 
         // Smoothing
         this.smoothSpeed = 8;

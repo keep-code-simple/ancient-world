@@ -204,67 +204,123 @@ class BiomeManager {
         return 0;
     }
 
-    // Get terrain height at position
+    // Get terrain height at position - Enhanced for better readability
     getHeightAt(x, z) {
         const key = `${Math.floor(x / 5)}_${Math.floor(z / 5)}`;
         if (this.heightMap.has(key)) {
             return this.heightMap.get(key);
         }
 
-        // Generate height based on biome
+        // Get biome at this position
         const biome = this.getBiomeAt(x, z);
         let height = 0;
 
+        // Multi-octave noise function for natural terrain
+        const noise = (px, pz, octaves = 3) => {
+            let value = 0;
+            let amplitude = 1;
+            let frequency = 1;
+            let maxValue = 0;
+
+            for (let i = 0; i < octaves; i++) {
+                value += Math.sin(px * 0.05 * frequency) * Math.cos(pz * 0.05 * frequency) * amplitude;
+                value += Math.sin((px + 100) * 0.08 * frequency) * Math.sin((pz + 100) * 0.08 * frequency) * amplitude * 0.5;
+                maxValue += amplitude;
+                amplitude *= 0.5;
+                frequency *= 2;
+            }
+            return value / maxValue;
+        };
+
+        // Ridge function for mountain peaks
+        const ridge = (px, pz) => {
+            let n = Math.sin(px * 0.06) * Math.cos(pz * 0.06);
+            return 1 - Math.abs(n) * 2; // Creates ridge-like formations
+        };
+
         if (biome.id === 'mountains') {
-            // Mountains have significant elevation
-            height = Math.abs(Math.sin(x * 0.08) * Math.cos(z * 0.08)) * 8 +
-                Math.sin(x * 0.15) * Math.cos(z * 0.15) * 3;
+            // Dramatic mountain terrain with peaks, ridges, and valleys
+            const baseHeight = noise(x, z, 4) * 12;
+            const ridgeHeight = ridge(x, z) * 8;
+            const peaks = Math.pow(Math.max(0, noise(x * 1.5, z * 1.5, 2)), 2) * 10;
+
+            // Add plateau formations at certain heights
+            height = baseHeight + ridgeHeight + peaks;
+
+            // Create terraced/plateau effect
+            const terraceHeight = 5;
+            height = Math.floor(height / terraceHeight) * terraceHeight +
+                (height % terraceHeight) * 0.3;
+
+            // Ensure minimum base height for mountains
+            height = Math.max(2, height);
+
         } else if (biome.id === 'magic') {
-            // Magic has floating island effect
-            height = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 2;
+            // Floating island effect with mystical undulation
+            const baseWave = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 3;
+            const floatIslands = Math.pow(Math.max(0, noise(x * 0.8, z * 0.8, 2)), 2) * 6;
+            height = baseWave + floatIslands;
+
         } else if (biome.id === 'desert') {
-            // Desert has dunes
-            height = Math.sin(x * 0.05 + z * 0.03) * 2;
+            // Sand dunes with realistic wave patterns
+            const mainDunes = Math.sin(x * 0.04 + z * 0.02) * 3;
+            const secondaryDunes = Math.sin(x * 0.08 - z * 0.06) * 1.5;
+            const ripples = Math.sin(x * 0.2) * Math.sin(z * 0.15) * 0.5;
+            height = mainDunes + secondaryDunes + ripples;
+
         } else if (biome.id === 'plains') {
-            // Plains are mostly flat
-            height = Math.sin(x * 0.02) * Math.sin(z * 0.02) * 0.5;
+            // Gentle rolling hills - mostly flat with subtle variation
+            height = noise(x, z, 2) * 1.5;
+
         } else {
-            // Forest has gentle hills
-            height = Math.sin(x * 0.04) * Math.sin(z * 0.04) * 2;
+            // Forest - moderate hills with some variation
+            const hills = noise(x, z, 3) * 4;
+            const gullies = Math.min(0, Math.sin(x * 0.15) * Math.sin(z * 0.12)) * 2;
+            height = hills + gullies;
         }
 
         this.heightMap.set(key, height);
         return height;
     }
 
-    // Create terrain for all biomes
+    // Create terrain for all biomes - Enhanced with slope shading and elevation colors
     createTerrain() {
-        const segments = 80;
+        const segments = 100; // Increased for smoother terrain
         const geometry = new THREE.PlaneGeometry(this.worldSize, this.worldSize, segments, segments);
 
         // Modify vertices for height and color per biome
         const positions = geometry.attributes.position.array;
         const colors = new Float32Array(positions.length);
 
+        // First pass: set heights
         for (let i = 0; i < positions.length; i += 3) {
             const x = positions[i];
             const z = positions[i + 1];
+            positions[i + 2] = this.getHeightAt(x, z);
+        }
 
-            // Get biome at this vertex
+        // Compute normals after height assignment for accurate slope calculation
+        geometry.computeVertexNormals();
+        const normals = geometry.attributes.normal.array;
+
+        // Sun direction for shading (normalized)
+        const sunDir = new THREE.Vector3(0.5, 0.8, 0.3).normalize();
+
+        // Second pass: set colors with slope shading and elevation gradients
+        for (let i = 0; i < positions.length; i += 3) {
+            const x = positions[i];
+            const z = positions[i + 1];
+            const height = positions[i + 2];
+
+            // Get normal for this vertex (slope direction)
+            const normal = new THREE.Vector3(normals[i], normals[i + 1], normals[i + 2]);
+
+            // Calculate slope shading based on normal dot sun direction
+            const slopeShading = Math.max(0.4, normal.dot(sunDir));
+
+            // Get biome and compute elevation-based color
             const biome = this.getBiomeAt(x, z);
-
-            // Set height
-            const height = this.getHeightAt(x, z);
-            positions[i + 2] = height;
-
-            // Set color based on biome
-            const color = new THREE.Color(biome.groundColor);
-
-            // Add variation
-            const variation = (Math.random() - 0.5) * 0.08;
-            color.r = Math.max(0, Math.min(1, color.r + variation));
-            color.g = Math.max(0, Math.min(1, color.g + variation));
-            color.b = Math.max(0, Math.min(1, color.b + variation));
+            const color = this.getElevationColor(biome, height, slopeShading);
 
             colors[i] = color.r;
             colors[i + 1] = color.g;
@@ -272,23 +328,97 @@ class BiomeManager {
         }
 
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        geometry.computeVertexNormals();
 
         const material = new THREE.MeshStandardMaterial({
             vertexColors: true,
-            roughness: 0.9,
-            metalness: 0.1
+            roughness: 0.85,
+            metalness: 0.05
         });
 
         const terrain = new THREE.Mesh(geometry, material);
         terrain.rotation.x = -Math.PI / 2;
         terrain.receiveShadow = true;
+        terrain.castShadow = true; // Terrain casts shadows for depth
         terrain.name = 'terrain';
 
         this.scene.add(terrain);
         this.terrain = terrain;
 
         return terrain;
+    }
+
+    // Get elevation-based color with slope shading
+    getElevationColor(biome, height, slopeShading) {
+        let color = new THREE.Color();
+
+        // Elevation thresholds for color bands
+        const lowThreshold = 3;
+        const midThreshold = 10;
+        const highThreshold = 18;
+
+        if (biome.id === 'mountains') {
+            // Mountains: rock grey → darker rock → snow white
+            if (height > highThreshold) {
+                // Snow caps
+                color.setHex(0xf0f5ff);
+            } else if (height > midThreshold) {
+                // High rock with snow patches
+                const t = (height - midThreshold) / (highThreshold - midThreshold);
+                color.setHex(0x7a7a7a).lerp(new THREE.Color(0xd0d8e0), t);
+            } else if (height > lowThreshold) {
+                // Mid-level rock
+                const t = (height - lowThreshold) / (midThreshold - lowThreshold);
+                color.setHex(0x5a5a5a).lerp(new THREE.Color(0x7a7a7a), t);
+            } else {
+                // Base rock/gravel
+                color.setHex(0x4a4a4a);
+            }
+        } else if (biome.id === 'forest') {
+            // Forest: dark green valleys → lighter green hills
+            const t = Math.max(0, Math.min(1, (height + 4) / 8));
+            color.setHex(0x1a3a1a).lerp(new THREE.Color(0x3d6a3d), t);
+        } else if (biome.id === 'plains') {
+            // Plains: golden grass with subtle height variation
+            const t = Math.max(0, Math.min(1, (height + 2) / 4));
+            color.setHex(0x7a8a4a).lerp(new THREE.Color(0x9aaa6a), t);
+        } else if (biome.id === 'desert') {
+            // Desert: darker in troughs, lighter on dune crests
+            const t = Math.max(0, Math.min(1, (height + 5) / 10));
+            color.setHex(0xa08050).lerp(new THREE.Color(0xd4b584), t);
+        } else if (biome.id === 'magic') {
+            // Magic: deep purple valleys → glowing lighter purple
+            const t = Math.max(0, Math.min(1, (height + 3) / 9));
+            color.setHex(0x3a2a4a).lerp(new THREE.Color(0x6a5a8a), t);
+            // Add slight emissive glow effect through brighter colors
+            color.r = Math.min(1, color.r * 1.1);
+            color.b = Math.min(1, color.b * 1.15);
+        } else {
+            // Default biome color
+            color.setHex(biome.groundColor);
+        }
+
+        // Apply slope shading (darker on north slopes, lighter on south)
+        color.r *= slopeShading;
+        color.g *= slopeShading;
+        color.b *= slopeShading;
+
+        // Add subtle noise for texture
+        const noise = (Math.random() - 0.5) * 0.04;
+        color.r = Math.max(0, Math.min(1, color.r + noise));
+        color.g = Math.max(0, Math.min(1, color.g + noise));
+        color.b = Math.max(0, Math.min(1, color.b + noise));
+
+        // Add contour lines effect (subtle darkening at elevation intervals)
+        const contourInterval = 4;
+        const contourProximity = Math.abs(height % contourInterval);
+        if (contourProximity < 0.3) {
+            const contourDarken = 0.92;
+            color.r *= contourDarken;
+            color.g *= contourDarken;
+            color.b *= contourDarken;
+        }
+
+        return color;
     }
 
     // Create water bodies (magic pools only - hazardous)
