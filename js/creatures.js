@@ -83,9 +83,28 @@ const CREATURE_TYPES = {
         size: 0.25,
         color: 0x66ffff,
         glowColor: 0x44dddd,
-        biomes: ['swamp'],
+        biomes: ['magic'],
         onAttack: 'flee',
         xp: 10
+    },
+    dragon: {
+        id: 'dragon',
+        name: 'Pet Dragon',
+        health: 100,
+        behavior: 'companion', // Special behavior - follows and assists
+        ability: 'fire_breath',
+        abilityValue: 20,
+        abilityCooldown: 8,
+        speed: 7,
+        size: 1.0,
+        color: 0xcc3333,
+        glowColor: 0xff6600,
+        biomes: ['magic'],
+        onAttack: null,
+        attack: 15,
+        xp: 0, // Can't be killed by enemies
+        isCompanion: true,
+        earnedBy: 'magic_quest' // Earned through gameplay
     }
 };
 
@@ -249,6 +268,9 @@ class Creature {
             case 'will_o_wisp':
                 this.createWispModel(scale, data);
                 break;
+            case 'dragon':
+                this.createDragonModel(scale, data);
+                break;
             default:
                 this.createGenericModel(scale, data);
         }
@@ -258,6 +280,98 @@ class Creature {
         this.group.position.set(x, height, z);
 
         this.scene.add(this.group);
+    }
+
+    // Dragon pet model
+    createDragonModel(scale, data) {
+        // Body
+        const bodyGeom = new THREE.ConeGeometry(0.6 * scale, 1.5 * scale, 8);
+        const bodyMat = new THREE.MeshStandardMaterial({
+            color: data.color,
+            emissive: data.glowColor,
+            emissiveIntensity: 0.3,
+            roughness: 0.6
+        });
+        this.body = new THREE.Mesh(bodyGeom, bodyMat);
+        this.body.rotation.x = -Math.PI / 2;
+        this.body.position.y = 1 * scale;
+        this.body.castShadow = true;
+        this.group.add(this.body);
+
+        // Head
+        const headGeom = new THREE.BoxGeometry(0.4 * scale, 0.3 * scale, 0.5 * scale);
+        const head = new THREE.Mesh(headGeom, bodyMat);
+        head.position.set(0, 1.2 * scale, 0.8 * scale);
+        head.castShadow = true;
+        this.group.add(head);
+
+        // Snout
+        const snoutGeom = new THREE.BoxGeometry(0.2 * scale, 0.15 * scale, 0.3 * scale);
+        const snout = new THREE.Mesh(snoutGeom, bodyMat);
+        snout.position.set(0, 1.1 * scale, 1.1 * scale);
+        this.group.add(snout);
+
+        // Eyes (glowing)
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const eyeGeom = new THREE.SphereGeometry(0.06 * scale);
+        const leftEye = new THREE.Mesh(eyeGeom, eyeMat);
+        leftEye.position.set(-0.12 * scale, 1.25 * scale, 1 * scale);
+        this.group.add(leftEye);
+        const rightEye = new THREE.Mesh(eyeGeom, eyeMat);
+        rightEye.position.set(0.12 * scale, 1.25 * scale, 1 * scale);
+        this.group.add(rightEye);
+
+        // Wings
+        const wingMat = new THREE.MeshStandardMaterial({
+            color: 0x991111,
+            transparent: true,
+            opacity: 0.8,
+            side: THREE.DoubleSide
+        });
+
+        // Left wing
+        const wingGeom = new THREE.PlaneGeometry(1.5 * scale, 0.8 * scale);
+        this.leftWing = new THREE.Mesh(wingGeom, wingMat);
+        this.leftWing.position.set(-0.8 * scale, 1.2 * scale, 0);
+        this.leftWing.rotation.y = Math.PI / 4;
+        this.leftWing.rotation.z = Math.PI / 6;
+        this.group.add(this.leftWing);
+
+        // Right wing
+        this.rightWing = new THREE.Mesh(wingGeom, wingMat);
+        this.rightWing.position.set(0.8 * scale, 1.2 * scale, 0);
+        this.rightWing.rotation.y = -Math.PI / 4;
+        this.rightWing.rotation.z = -Math.PI / 6;
+        this.group.add(this.rightWing);
+
+        // Tail
+        const tailGeom = new THREE.CylinderGeometry(0.08 * scale, 0.2 * scale, 1.2 * scale);
+        const tail = new THREE.Mesh(tailGeom, bodyMat);
+        tail.position.set(0, 0.8 * scale, -0.8 * scale);
+        tail.rotation.x = Math.PI / 4;
+        this.group.add(tail);
+
+        // Tail spike
+        const spikeMat = new THREE.MeshStandardMaterial({ color: 0x661111 });
+        const spikeGeom = new THREE.ConeGeometry(0.1 * scale, 0.3 * scale, 4);
+        const spike = new THREE.Mesh(spikeGeom, spikeMat);
+        spike.position.set(0, 0.5 * scale, -1.4 * scale);
+        spike.rotation.x = -Math.PI / 4;
+        this.group.add(spike);
+
+        // Legs
+        const legGeom = new THREE.CylinderGeometry(0.08 * scale, 0.1 * scale, 0.5 * scale);
+        const legMat = new THREE.MeshStandardMaterial({ color: data.color });
+        [[-0.3, 0.25, 0.2], [0.3, 0.25, 0.2], [-0.3, 0.25, -0.2], [0.3, 0.25, -0.2]].forEach(pos => {
+            const leg = new THREE.Mesh(legGeom, legMat);
+            leg.position.set(pos[0] * scale, pos[1] * scale, pos[2] * scale);
+            this.group.add(leg);
+        });
+
+        // Fire glow
+        this.glow = new THREE.PointLight(data.glowColor, 1, 10);
+        this.glow.position.set(0, 1 * scale, 0.5 * scale);
+        this.group.add(this.glow);
     }
 
     createFairyModel(scale, data) {

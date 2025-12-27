@@ -1,6 +1,7 @@
 /**
  * AI Companion - Simulated co-op partner
  * Follows player, assists in combat, independent targeting
+ * Companion kills count toward player's kill count
  */
 
 class Companion {
@@ -22,12 +23,21 @@ class Companion {
         this.attackRange = 2.5;
         this.target = null;
 
+        // Kill tracking - companion kills count for player
+        this.kills = 0;
+        this.onKillCallback = null;
+
         // Behavior
         this.followDistance = 3;
         this.state = 'follow'; // follow, combat, idle
 
         // Create model
         this.createModel();
+    }
+
+    // Set callback for when companion gets a kill
+    setOnKillCallback(callback) {
+        this.onKillCallback = callback;
     }
 
     createModel() {
@@ -317,10 +327,18 @@ class Companion {
     attack(target) {
         // Deal damage
         const damage = this.stats.attack;
-        target.takeDamage(damage);
+        const killed = target.takeDamage(damage);
 
         // Create arrow projectile visual (simple)
         this.createArrowEffect(target.position);
+
+        // Track kills - companion kills count for player
+        if (killed) {
+            this.kills++;
+            if (this.onKillCallback) {
+                this.onKillCallback(target);
+            }
+        }
 
         return damage;
     }

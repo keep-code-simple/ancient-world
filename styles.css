@@ -748,3 +748,75 @@ body {
         font-size: 22px;
     }
 }
+
+/* Build Mode UI */
+#build-ui {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+#build-panel {
+    background: linear-gradient(135deg, rgba(21, 21, 37, 0.95), rgba(37, 37, 64, 0.9));
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+#build-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+#build-type,
+#build-cost {
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+#cycle-build-btn,
+#place-build-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: rgba(139, 92, 246, 0.2);
+    color: var(--color-text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#cycle-build-btn:hover,
+#place-build-btn:hover {
+    background: rgba(139, 92, 246, 0.4);
+}
+
+/* Resource Display */
+#resource-display {
+    position: fixed;
+    bottom: var(--spacing-md);
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, rgba(21, 21, 37, 0.9), rgba(37, 37, 64, 0.8));
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    backdrop-filter: blur(10px);
+    display: flex;
+    gap: var(--spacing-md);
+    z-index: 50;
+}
+
+#resource-display span {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+}
